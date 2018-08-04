@@ -3,7 +3,7 @@ https://docs.google.com/spreadsheets/d/1FKCvfmLslp2ZULWL30a80aQD6QMHA1uS4CBgFiIh
 上面為Google試算表連結
 <br>gs檔為對應它的內嵌程式碼
 
-
+------------------------------
 從試算表中"GAS設定"頁面取值的部分
 <br>也就是程式碼中getSetting(row)的部分
 <br>應該要用function再包一層
