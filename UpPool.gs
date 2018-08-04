@@ -26,12 +26,12 @@ function onEdit() {
   var aColumn = aCell.getColumn();
   var aRow = aCell.getRow();
   
-  var editListRange = ( aColumn == 3 && aRow > 2 && aRow < 11 && aSheet.getName() == '精準分析' );
+  var editListRange = ( aColumn == 3 && 2 < aRow && aRow < 11 && aSheet.getName() == '精準分析' );
   if (editListRange) 
   {
     var range = aSheet.getRange(aCell.getRow(), aColumn + 1);
     var sourceRange = SpreadsheetApp.getActiveSpreadsheet().getRangeByName(aCell.getValue());
-    setDataValid_(range,sourceRange);
+    setDataValid(range,sourceRange);
   }
   
   var editAnalysisRange = ( 4 <= aColumn && aColumn <=5 && 3 <= aRow && aRow <=10 && aSheet.getName() == '精準分析' );
@@ -44,7 +44,7 @@ function onEdit() {
 }
 
 //---------------設定資料驗證清單---------------
-function setDataValid_(range, sourceRange) {
+function setDataValid(range, sourceRange) {
   var rule = SpreadsheetApp.newDataValidation().requireValueInRange(sourceRange, true).build();
   range.setDataValidation(rule);
 }
@@ -64,12 +64,12 @@ function getEvaluationsSheet() {
   return getMySheetByName('評分');
 }
 
-//---------------取得"評分BK"表格---------------
+//---------------取得"評分備份"表格---------------
 function getEvaluationsBackUpSheet() {
-  return getMySheetByName('評分BK');
+  return getMySheetByName('評分備份');
 }
 
-//---------------取得"評分BK"表格---------------
+//---------------取得"精準UP"表格---------------
 function getUpPoolSheet() {
   return getMySheetByName('精準UP');
 }
@@ -97,8 +97,7 @@ function AddDay(now,days) {
   var aDay = 1000*60*60*24;
   var date = new Date(now);
   var newDate = new Date(date.getTime() + aDay * (days+1));
-  var output = Utilities.formatDate(newDate,"GMT",'yyyy/MM/dd');
-  return output;
+  return Utilities.formatDate(newDate,"GMT",'yyyy/MM/dd');
 }
 
 //---------------切換精準池---------------
@@ -112,15 +111,14 @@ function switchUpPoolAB() {
   data[0] = data[1];
   data[1] = tmp;
   range.setValues(data);
-  Logger.log(data);
   
-  var validRange = range.getCell(1,2);
-  var sourceRange = getNameRange(data[0][0]);
-  setDataValid_(validRange,sourceRange);
-  
-  validRange = range.getCell(2,2);
-  sourceRange = getNameRange(data[1][0])
-  setDataValid_(validRange,sourceRange);
+  var validRange;
+  var sourceRange;
+  for(var i=0; i<2; i++) {
+    validRange = range.getCell(i+1,2);
+    sourceRange = getNameRange(data[i][0]);
+    setDataValid(validRange,sourceRange);
+  }
   
   addAnalysisNotes();
 }
@@ -141,14 +139,14 @@ function switchCurrentUpPool() {
 function switchUpPool(setNum){
   var upPoolSheet = getUpPoolSheet();
   var lotteryAnalysisSheet = getLotteryAnalysisSheet();
-  var setting;
+  var pos;
   var copyRange
   var pasteRange;
   
-  setting = getSetting(setNum);
-  copyRange = getRangeBySetting(upPoolSheet,setting);
-  setting = getSetting(16);
-  pasteRange = getRangeBySetting(lotteryAnalysisSheet,setting);
+  pos = getSetting(setNum);
+  copyRange = getRangeBySetting(upPoolSheet,pos);
+  pos = getSetting(16);
+  pasteRange = getRangeBySetting(lotteryAnalysisSheet,pos);
   var data = copyRange.getValues();
   pasteRange.setValues(data);
   
@@ -159,7 +157,7 @@ function switchUpPool(setNum){
   for(var i=0; i<len ; i++){
     validRange = pasteRange.getCell(i+1+skip,2);
     sourceRange = getNameRange(data[i+skip][0]);
-    setDataValid_(validRange,sourceRange);
+    setDataValid(validRange,sourceRange);
   }
 }
 
@@ -167,9 +165,6 @@ function switchUpPool(setNum){
 function writeUpPool() {
   var upPoolSheet = getUpPoolSheet();
   var lotteryAnalysisSheet = getLotteryAnalysisSheet();
-  var setting;
-  var copyRange
-  var pasteRange;
   
   copyPasteData(upPoolSheet,17,upPoolSheet,19);
   copyPasteData(upPoolSheet,18,upPoolSheet,20);
@@ -181,21 +176,21 @@ function writeUpPool() {
   copyData[2] = copyData[3];
   copyData[3] = tmp;
   
-  setting = getSetting(18);
-  pasteRange = getRangeBySetting(upPoolSheet,setting);
+  var pos = getSetting(18);
+  var pasteRange = getRangeBySetting(upPoolSheet,pos);
   pasteRange.setValues(copyData);
 }
 
 //---------------複製貼上數值---------------
 function copyPasteData(copySheet,copyNum,pasteSheet,pasteNum) {
-  var setting;
+  var pos;
   var copyRange
   var pasteRange;
   
-  setting = getSetting(copyNum);
-  copyRange = getRangeBySetting(copySheet,setting);
-  setting = getSetting(pasteNum);
-  pasteRange = getRangeBySetting(pasteSheet,setting);
+  pos = getSetting(copyNum);
+  copyRange = getRangeBySetting(copySheet,pos);
+  pos = getSetting(pasteNum);
+  pasteRange = getRangeBySetting(pasteSheet,pos);
   var copyData = copyRange.getValues()
   pasteRange.setValues(copyRange.getValues());
   
@@ -204,25 +199,24 @@ function copyPasteData(copySheet,copyNum,pasteSheet,pasteNum) {
 
 //---------------備份評分---------------
 function backUpEvaluations() {
-  var aSheet = getEvaluationsSheet();
-  var bSheet = getEvaluationsBackUpSheet();
+  var evaluationsSheet = getEvaluationsSheet();
+  var backUpbSheet = getEvaluationsBackUpSheet();
   
-  CopyEvaluations(aSheet,bSheet);
+  CopyEvaluations(evaluationsSheet,backUpbSheet);
 }
 
 //---------------復原評分---------------
 function restoreEvaluations() {
-  var aSheet = getEvaluationsBackUpSheet();
-  var bSheet = getEvaluationsSheet();
+  var backUpbSheet = getEvaluationsBackUpSheet();
+  var evaluationsSheet = getEvaluationsSheet();
   
-  CopyEvaluations(aSheet,bSheet);
+  CopyEvaluations(backUpbSheet,evaluationsSheet);
 }
 
 //---------------複製評分---------------
 function CopyEvaluations(copySheet, pasteSheet) {
   
   var pos = getSetting(4);
-  //Logger.log(setting);
   
   var copySheetRange = getRangeBySetting(copySheet,pos);
   var pasteSheetRange = getRangeBySetting(pasteSheet,pos);
@@ -265,17 +259,17 @@ function addAnalysisNotes() {
 
 //---------------清除分析備註---------------
 function clearAnalysisNotes() {
-  var aSheet = getLotteryAnalysisSheet();
+  var analysisSheet = getLotteryAnalysisSheet();
   for(var i=0; i<3; i++) {
-    var setting = getSetting(i*2+8);
-    var editRange = getRangeBySetting(aSheet,setting);
+    var pos = getSetting(i*2+8);
+    var editRange = getRangeBySetting(analysisSheet,pos);
     editRange.clearNote();
   }
 }
 
 //---------------復原分析格式---------------
 function restoreAnalysisFormat() {
-  var aSheet = getLotteryAnalysisSheet();
+  var analysisSheet = getLotteryAnalysisSheet();
   
   var fontSizes = setValueLoop(12);
   var fontFamilies = setValueLoop('Microsoft JhengHei');
@@ -286,17 +280,17 @@ function restoreAnalysisFormat() {
   backgrounds[2] = setValueLoop('#f9cb9c');
   
   for(var i=0; i<3; i++) {
-    var setting = getSetting(i*2+8);
-    var editRange = getRangeBySetting(aSheet,setting);
-    var setText = getSettingFormulas(2,i+6,22,1);
-    editRange.setFormulas(setText);
+    var pos = getSetting(i*2+8);
+    var editRange = getRangeBySetting(analysisSheet,pos);
+    var formulas = getSettingFormulas(2,i+6,22,1);
+    editRange.setFormulas(formulas);
     editRange.setFontSizes(fontSizes);
     editRange.setFontFamilies(fontFamilies);
     editRange.setBackgrounds(backgrounds[i]);
   }
 }
 
-//---------------設置 陣列[22][0]---------------
+//---------------設置 陣列[22][0]=value---------------
 function setValueLoop(value) {
   var array = [];
   for(var i=0; i<22; i++) {
