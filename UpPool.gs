@@ -1,21 +1,24 @@
 ﻿//---------------開啟觸發---------------
 function onOpen() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var menuEntries = [];
   
-  menuEntries.push({name: "切換精準AB池", functionName: "switchUpPoolAB"});
-  menuEntries.push({name: "切換上期精準", functionName: "switchPreviousUpPool"});
-  menuEntries.push({name: "切換當期精準", functionName: "switchCurrentUpPool"});
-  menuEntries.push({name: "寫入精準UP（編）", functionName: "writeUpPool"});
-  menuEntries.push(null);
-  menuEntries.push({name: "重補分析註解", functionName: "addAnalysisNotes"});
-  menuEntries.push({name: "清除分析註解", functionName: "clearAnalysisNotes"});
-  menuEntries.push({name: "復原分析格式", functionName: "restoreAnalysisFormat"});
-  menuEntries.push(null);
-  menuEntries.push({name: "備分評分（編）", functionName: "backUpEvaluations"});
-  menuEntries.push({name: "復原評分", functionName: "restoreEvaluations"});
-  
-  ss.addMenu("崩壞精準", menuEntries);
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('崩壞精準')
+    .addSubMenu(
+      ui.createMenu('切換精準池')
+        .addItem('當期A池', 'switchCurrentUpPoolA')
+        .addItem('當期B池', 'switchCurrentUpPoolB')
+        .addItem('上期A池', 'switchPreviousUpPoolA')
+        .addItem('上期B池', 'switchPreviousUpPoolB')
+     )
+    .addItem('寫入精準UP（編)', 'writeUpPool')
+    .addSeparator()
+    .addItem('重補分析註解', 'addAnalysisNotes')
+    .addItem('清除分析註解', 'clearAnalysisNotes')
+    .addItem('復原分析格式', 'restoreAnalysisFormat')
+    .addSeparator()
+    .addItem('備分評分（編）', 'backUpEvaluations')
+    .addItem('復原評分', 'restoreEvaluations')
+    .addToUi();
 }
 
 //---------------編輯觸發---------------
@@ -100,39 +103,39 @@ function AddDay(now,days) {
   return Utilities.formatDate(newDate,"GMT",'yyyy/MM/dd');
 }
 
-//---------------切換精準池---------------
-function switchUpPoolAB() {
-  var pos = getSetting(14);
-  var sheet = getLotteryAnalysisSheet();
-  var range = getRangeBySetting(sheet,pos);
-  var data = range.getValues();
+//---------------切換當期精準A池---------------
+function switchCurrentUpPoolA() {
+  setUpPoolTitle('當期A');
+  switchUpPool(17);
+  addAnalysisNotes();
   
-  var tmp = data[0];
-  data[0] = data[1];
-  data[1] = tmp;
-  range.setValues(data);
-  
-  var validRange;
-  var sourceRange;
-  for(var i=0; i<2; i++) {
-    validRange = range.getCell(i+1,2);
-    sourceRange = getNameRange(data[i][0]);
-    setDataValid(validRange,sourceRange);
-  }
-  
+}
+
+//---------------切換當期精準B池---------------
+function switchCurrentUpPoolB() {
+  setUpPoolTitle('當期B');
+  switchUpPool(18);
   addAnalysisNotes();
 }
 
-//---------------切換上期精準---------------
-function switchPreviousUpPool() {
+//---------------切換上期精準A池---------------
+function switchPreviousUpPoolA() {
+  setUpPoolTitle('上期A');
   switchUpPool(19);
   addAnalysisNotes();
 }
 
-//---------------切換當期精準---------------
-function switchCurrentUpPool() {
-  switchUpPool(17);
+//---------------切換上期精準B池---------------
+function switchPreviousUpPoolB() {
+  setUpPoolTitle('上期B');
+  switchUpPool(20);
   addAnalysisNotes();
+}
+
+//---------------精準標題---------------
+function setUpPoolTitle(name) {
+  var analysisSheet = getLotteryAnalysisSheet();
+  analysisSheet.getRange(2,2,1,1).setValue(name);
 }
 
 //---------------切換一期精準---------------
@@ -211,6 +214,7 @@ function restoreEvaluations() {
   var evaluationsSheet = getEvaluationsSheet();
   
   CopyEvaluations(backUpbSheet,evaluationsSheet);
+  addAnalysisNotes();
 }
 
 //---------------複製評分---------------
