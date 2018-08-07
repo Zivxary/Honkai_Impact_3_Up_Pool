@@ -29,6 +29,7 @@ function onEdit() {
   var aColumn = aCell.getColumn();
   var aRow = aCell.getRow();
   
+  //----------武器兩層下拉式選單----------
   var editListRange = ( aColumn == 3 && 2 < aRow && aRow < 11 && aSheet.getName() == '精準分析' );
   if (editListRange) 
   {
@@ -37,9 +38,33 @@ function onEdit() {
     setDataValid(range,sourceRange);
   }
   
+  //----------精準池選擇----------
+  var editPoolRange = ( aColumn == 2 && aRow == 2  && aSheet.getName() == '精準分析' );
+  if(editPoolRange) {
+    var poolName = getLotteryAnalysisSheet().getRange(2,2,1,1).getValue();
+    switch (poolName) {
+      case '當期A':
+        switchCurrentUpPoolA();
+        break;
+      case '當期B':
+        switchCurrentUpPoolB();
+        break;
+      case '上期A':
+        switchPreviousUpPoolA();
+        break;
+      case '上期B':
+        switchPreviousUpPoolB();
+        break;
+      default:
+        break;
+    }
+  }
+  
+  //----------編輯精準池修補註解----------
   var editAnalysisRange = ( 4 <= aColumn && aColumn <=5 && 3 <= aRow && aRow <=10 && aSheet.getName() == '精準分析' );
   if (editAnalysisRange)
   {
+    setUpPoolTitle('被修改');
     Utilities.sleep(1000);
     addAnalysisNotes();
   }
@@ -105,31 +130,35 @@ function AddDay(now,days) {
 
 //---------------切換當期精準A池---------------
 function switchCurrentUpPoolA() {
-  setUpPoolTitle('當期A');
+  setUpPoolTitle('修改中');
   switchUpPool(17);
   addAnalysisNotes();
+  setUpPoolTitle('當期A');
   
 }
 
 //---------------切換當期精準B池---------------
 function switchCurrentUpPoolB() {
-  setUpPoolTitle('當期B');
+  setUpPoolTitle('修改中');
   switchUpPool(18);
   addAnalysisNotes();
+  setUpPoolTitle('當期B');
 }
 
 //---------------切換上期精準A池---------------
 function switchPreviousUpPoolA() {
-  setUpPoolTitle('上期A');
+  setUpPoolTitle('修改中');
   switchUpPool(19);
   addAnalysisNotes();
+  setUpPoolTitle('上期A');
 }
 
 //---------------切換上期精準B池---------------
 function switchPreviousUpPoolB() {
-  setUpPoolTitle('上期B');
+  setUpPoolTitle('修改中');
   switchUpPool(20);
   addAnalysisNotes();
+  setUpPoolTitle('上期B');
 }
 
 //---------------精準標題---------------
